@@ -66,3 +66,44 @@ void junte_nodos_no_inicio_do_vetor (Tabela_de_frequencias* tab /* por referenci
         tab->vetor[primeiro_nao_NULL]=NULL;
     }
 }
+
+#include <stdlib.h>
+
+int compara_frequencias(const void* a, const void* b) {
+    // Ordenar em ordem crescente de frequência
+    Ptr_de_no_de_arvore_binaria noA = *(Ptr_de_no_de_arvore_binaria*)a;
+    Ptr_de_no_de_arvore_binaria noB = *(Ptr_de_no_de_arvore_binaria*)b;
+    
+    return (noA->informacao.frequencia > noB->informacao.frequencia) - 
+           (noA->informacao.frequencia < noB->informacao.frequencia);
+}
+
+void ordenar_nos(Tabela_de_frequencias* tab) {
+    qsort(tab->vetor, 256, sizeof(Ptr_de_no_de_arvore_binaria), compara_frequencias);
+}
+
+
+boolean constroi_arvore_huffman(Tabela_de_frequencias* tab, Ptr_de_no_de_arvore_binaria* raiz) {
+    while (tab->quantidade_de_posicoes_preenchidas > 1) {
+        ordenar_nos(tab);
+
+        Ptr_de_no_de_arvore_binaria esq = tab->vetor[0];
+        Ptr_de_no_de_arvore_binaria dir = tab->vetor[1];
+
+        Elemento novo_elem;
+        novo_elem.byte = 0; 
+        novo_elem.frequencia = esq->informacao.frequencia + dir->informacao.frequencia;
+
+        Ptr_de_no_de_arvore_binaria novo_no;
+        if (!novo_no_de_arvore_binaria(&novo_no, esq, novo_elem, dir)) return false;
+
+        tab->vetor[0] = novo_no;  
+        tab->vetor[1] = NULL;
+
+        tab->quantidade_de_posicoes_preenchidas--;
+    }
+
+    *raiz = tab->vetor[0];
+    return true;
+}
+

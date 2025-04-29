@@ -16,32 +16,32 @@ void free_codigo (Codigo* c /* por referência */)
     if (c->byte!=NULL) free(c->byte);
 }
 
-boolean adiciona_bit (Codigo* c /* por referência */,
-                      U8 valor /* 0 ou 1 */)
+boolean adiciona_bit(Codigo* c, U8 valor)
 {
-    if (c->tamanho==c->capacidade)
+    if (c->tamanho == c->capacidade)
     {
-        U8* novo=(U8*)malloc((c->capacidade/8+1)*sizeof(U8));
-        if (novo==NULL) return false;
+        U8* novo = (U8*)malloc((c->capacidade / 8 + 1) * sizeof(U8));
+        if (novo == NULL) return false;
 
-        for(int i=0;i<c->tamanho/8;i++)
-            novo[i]=c->byte[i];
+        for (int i = 0; i < c->capacidade / 8; i++)
+            novo[i] = c->byte[i];
+
+        novo[c->capacidade / 8] = 0; 
 
         free(c->byte);
-        c->byte=novo;
-
-        c->capacidade+=8;
+        c->byte = novo;
+        c->capacidade += 8;
     }
 
-    c->byte[c->capacidade/8-1]<<=1;
+    int byte_index = c->tamanho / 8;
+    int bit_offset = 7 - (c->tamanho % 8);
 
-    if (valor==1)
-        c->byte[c->capacidade/8-1]|=1;
+    if (valor)
+        c->byte[byte_index] |= (1 << bit_offset);
 
     c->tamanho++;
     return true;
 }
-
 
 boolean joga_fora_bit (Codigo* c /* por referência */)
 {

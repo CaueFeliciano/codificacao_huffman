@@ -2,11 +2,10 @@
 #define CODIGO
 #include "meus_tipos.h"
 
-typedef struct
-{
+typedef struct{
     U8* byte /* vetor dinâmico de bytes */;
     U8  capacidade /* em bits */;
-    U8  tamanho /* em bits */
+    U8  tamanho /* em bits */;
 } Codigo;
 
 boolean novo_codigo (Codigo* c /* por referência */);
