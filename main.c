@@ -23,6 +23,7 @@ int main() {
     }
 
     Ptr_de_no_de_arvore_binaria raiz;
+    printf("chamando constroi_arvore");
     if (constroi_arvore_huffman(&tab, &raiz)) {
         printf("\nÁrvore de Huffman construída com sucesso!\n");
     } else {
@@ -35,7 +36,7 @@ int main() {
         printf("Erro ao criar código.\n");
         return 1;
     }
-
+    
     adiciona_bit(&codigo, 1);
     adiciona_bit(&codigo, 0);
     adiciona_bit(&codigo, 1);
@@ -43,6 +44,9 @@ int main() {
     adiciona_bit(&codigo, 0);
 
     printf("\nTamanho atual do código: %d bits\n", codigo.tamanho);
+
+    printf("\nArvore montada:");
+    imprime_arvore(raiz, 0);
 
     free_codigo(&codigo);
 

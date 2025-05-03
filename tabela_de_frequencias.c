@@ -70,13 +70,17 @@ void junte_nodos_no_inicio_do_vetor (Tabela_de_frequencias* tab /* por referenci
 #include <stdlib.h>
 
 int compara_frequencias(const void* a, const void* b) {
-    // Ordenar em ordem crescente de frequência
     Ptr_de_no_de_arvore_binaria noA = *(Ptr_de_no_de_arvore_binaria*)a;
     Ptr_de_no_de_arvore_binaria noB = *(Ptr_de_no_de_arvore_binaria*)b;
-    
+
+    if (noA == NULL && noB == NULL) return 0;
+    if (noA == NULL) return 1; 
+    if (noB == NULL) return -1; 
+
     return (noA->informacao.frequencia > noB->informacao.frequencia) - 
            (noA->informacao.frequencia < noB->informacao.frequencia);
 }
+
 
 void ordenar_nos(Tabela_de_frequencias* tab) {
     qsort(tab->vetor, 256, sizeof(Ptr_de_no_de_arvore_binaria), compara_frequencias);
@@ -106,4 +110,18 @@ boolean constroi_arvore_huffman(Tabela_de_frequencias* tab, Ptr_de_no_de_arvore_
     *raiz = tab->vetor[0];
     return true;
 }
+void imprime_arvore(Ptr_de_no_de_arvore_binaria raiz, int nivel) {
+    if (raiz == NULL) return;
 
+    for (int i = 0; i < nivel; i++) {
+        printf("  ");
+    }
+
+    if (raiz->esquerda == NULL && raiz->direita == NULL)
+        printf("'%c' (%lu)\n", raiz->informacao.byte, raiz->informacao.frequencia);
+    else
+        printf("(*) (%lu)\n", raiz->informacao.frequencia);
+
+    imprime_arvore(raiz->esquerda, nivel + 1);
+    imprime_arvore(raiz->direita, nivel + 1);
+}

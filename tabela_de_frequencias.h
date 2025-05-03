@@ -25,5 +25,6 @@ boolean inclua_byte (U8 byte /* por valor */, Tabela_de_frequencias* tab /* por 
 void junte_nodos_no_inicio_do_vetor (Tabela_de_frequencias* tab /* por referencia */);
 void ordenar_nos(Tabela_de_frequencias* tab); // Para ordenar os nós
 boolean constroi_arvore_huffman(Tabela_de_frequencias* tab, Ptr_de_no_de_arvore_binaria* raiz); 
+void imprime_arvore(Ptr_de_no_de_arvore_binaria raiz, int nivel);
 
 #endif
