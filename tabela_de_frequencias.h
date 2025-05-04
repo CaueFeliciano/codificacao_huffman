@@ -1,5 +1,6 @@
 #ifndef TABELA_DE_FREQUENCIAS
 #define TABELA_DE_FREQUENCIAS
+#include <stdio.h>
 #include "meus_tipos.h"
 
 typedef struct {
@@ -26,5 +27,6 @@ void junte_nodos_no_inicio_do_vetor (Tabela_de_frequencias* tab /* por referenci
 void ordenar_nos(Tabela_de_frequencias* tab); // Para ordenar os nós
 boolean constroi_arvore_huffman(Tabela_de_frequencias* tab, Ptr_de_no_de_arvore_binaria* raiz); 
 void imprime_arvore(Ptr_de_no_de_arvore_binaria raiz, int nivel);
+void salvar_arvore(Ptr_de_no_de_arvore_binaria raiz, FILE* saida);
 
 #endif

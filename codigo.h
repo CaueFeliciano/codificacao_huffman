@@ -1,6 +1,7 @@
 #ifndef CODIGO
 #define CODIGO
 #include "meus_tipos.h"
+#include "tabela_de_frequencias.h"
 
 typedef struct{
     U8* byte /* vetor dinâmico de bytes */;
@@ -17,5 +18,7 @@ boolean joga_fora_bit (Codigo* c /* por referência */);
 
 boolean clone (Codigo original, /* por valor */
                Codigo* copia /* por referencia */);
+
+void gerar_codigos_bit(Ptr_de_no_de_arvore_binaria raiz, Codigo codigos[256], Codigo atual, int profundidade);
 
 #endif

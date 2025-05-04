@@ -1,21 +1,20 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "meus_tipos.h"
 #include "codigo.h"
 #include "tabela_de_frequencias.h"
-
-// Declaração da função de compactação
-void compactar_arquivo(const char* nome_entrada, const char* nome_saida);
+#include "compactar.h"
 
 int main() {
-    int escolha;
+    int opcao;
     printf("Escolha uma opção:\n");
-    printf("1 - Rodar teste com vetor fixo (a, b, a, c...)\n");
+    printf("1 - Rodar teste com vetor fixo (Testar árvore)\n");
     printf("2 - Compactar arquivo real\n");
     printf("Opção: ");
-    scanf("%d", &escolha);
+    scanf("%d", &opcao);
 
-    if (escolha == 1) {
-        // ---------- TESTE COM VETOR FIXO ----------
+    if (opcao == 1) {
         Tabela_de_frequencias tab;
         nova_tabela_de_frequencias(&tab);
 
@@ -34,9 +33,8 @@ int main() {
         }
 
         Ptr_de_no_de_arvore_binaria raiz;
-        printf("chamando constroi_arvore");
         if (constroi_arvore_huffman(&tab, &raiz)) {
-            printf("\nÁrvore de Huffman construída com sucesso!\n");
+            printf("\nÁrvore de Huffman construída!\n");
         } else {
             printf("\nErro ao construir a árvore de Huffman.\n");
             return 1;
@@ -56,26 +54,50 @@ int main() {
 
         printf("\nTamanho atual do código: %d bits\n", codigo.tamanho);
 
-        printf("\nArvore montada:\n");
+        printf("\nÁrvore montada:\n");
         imprime_arvore(raiz, 0);
 
         free_codigo(&codigo);
     }
 
-    else if (escolha == 2) {
-        // ---------- COMPACTAÇÃO DE ARQUIVO ----------
+    else if (opcao == 2) {
         char entrada[100], saida[100];
-        printf("Digite o nome do arquivo de entrada: ");
+        printf("Nome do arquivo de entrada: ");
         scanf("%s", entrada);
-        printf("Digite o nome do arquivo compactado de saída: ");
+        printf("Nome do arquivo compactado: ");
         scanf("%s", saida);
 
-        compactar_arquivo(entrada, saida);
+        FILE* arq = fopen(entrada, "rb");
+        if (arq == NULL) {
+            printf("Erro ao abrir arquvo de entrada.\n");
+            return 1;
+        }
+
+        Tabela_de_frequencias tab;
+        nova_tabela_de_frequencias(&tab);
+
+        U8 byte;
+        while (fread(&byte, 1, 1, arq) == 1) {
+            inclua_byte(byte, &tab);
+        }
+
+        fclose(arq);
+
+        Ptr_de_no_de_arvore_binaria raiz;
+        if (!constroi_arvore_huffman(&tab, &raiz)) {
+            printf("Erro ao construir a árvore de Huffman.\n");
+            return 1;
+        }
+
+        if (compactar_arquivo(entrada, saida, raiz)) {
+            printf("Arquivo compactado com sucesso!\n");
+        } else {
+            printf("Erro na compactação do arquivo.\n");
+        }
     }
 
     else {
         printf("Opção inválida.\n");
-        return 1;
     }
 
     return 0;

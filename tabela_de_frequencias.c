@@ -110,6 +110,22 @@ boolean constroi_arvore_huffman(Tabela_de_frequencias* tab, Ptr_de_no_de_arvore_
     *raiz = tab->vetor[0];
     return true;
 }
+
+void salvar_arvore(Ptr_de_no_de_arvore_binaria raiz, FILE* saida) {
+    if (raiz == NULL) {
+        fputc(0, saida); 
+        return;
+    }
+
+    fputc(1, saida); 
+    fputc(raiz->informacao.byte, saida);  
+    fwrite(&(raiz->informacao.frequencia), sizeof(U32), 1, saida); 
+
+    salvar_arvore(raiz->esquerda, saida);
+    salvar_arvore(raiz->direita, saida);
+}
+
+
 void imprime_arvore(Ptr_de_no_de_arvore_binaria raiz, int nivel) {
     if (raiz == NULL) return;
 
