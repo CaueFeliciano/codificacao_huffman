@@ -81,3 +81,23 @@ boolean clone (Codigo original, /* por valor */
     copia->tamanho=original.tamanho;
     return true;
 }
+
+void gerar_codigos_bit(Ptr_de_no_de_arvore_binaria raiz,
+    Codigo codigos[256],
+    Codigo atual,
+    int profundidade) {
+if (raiz == NULL) return;
+
+if (raiz->esquerda == NULL && raiz->direita == NULL) {
+clone(atual, &codigos[raiz->informacao.byte]);
+return;
+}
+
+adiciona_bit(&atual, 0);
+gerar_codigos_bit(raiz->esquerda, codigos, atual, profundidade + 1);
+joga_fora_bit(&atual);
+
+adiciona_bit(&atual, 1);
+gerar_codigos_bit(raiz->direita, codigos, atual, profundidade + 1);
+joga_fora_bit(&atual);
+}
