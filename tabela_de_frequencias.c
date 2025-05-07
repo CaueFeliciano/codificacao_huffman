@@ -2,18 +2,14 @@
 #include <stdlib.h>
 #include "tabela_de_frequencias.h"
 
-void nova_tabela_de_frequencias (Tabela_de_frequencias* tab /* por referência */)
+void nova_tabela_de_frequencias (Tabela_de_frequencias* tab)
 {
     for (U16 i=0; i<256; i++)
         tab->vetor[i]=NULL;
 
     tab->quantidade_de_posicoes_preenchidas=0;
 }
-//funcao static, ou seja, so pode ser usada dentro do mesmo arquivo
-static boolean novo_no_de_arvore_binaria (Ptr_de_no_de_arvore_binaria* novo /* por referencia */,
-                                          Ptr_de_no_de_arvore_binaria esq /* por valor */,
-                                          Elemento inf /* por valor */,
-                                          Ptr_de_no_de_arvore_binaria dir /* por valor */)
+static boolean novo_no_de_arvore_binaria (Ptr_de_no_de_arvore_binaria* novo, Ptr_de_no_de_arvore_binaria esq, Elemento inf ,Ptr_de_no_de_arvore_binaria dir)
 {
     *novo = (Ptr_de_no_de_arvore_binaria)malloc(sizeof(Struct_do_no_de_arvore_binaria));
 
@@ -26,8 +22,7 @@ static boolean novo_no_de_arvore_binaria (Ptr_de_no_de_arvore_binaria* novo /* p
     return true;
 }
 
-boolean inclua_byte (U8 byte /* por valor */,
-                     Tabela_de_frequencias* tab /* por referencia */)
+boolean inclua_byte (U8 byte , Tabela_de_frequencias* tab)
 {
     if (tab->vetor[byte]!=NULL)
     {
@@ -45,8 +40,7 @@ boolean inclua_byte (U8 byte /* por valor */,
     tab->quantidade_de_posicoes_preenchidas++;
     return true;
 }
-//essa função serve para agrupar os dados no inicio, para montar a árvore é necessário ordenar a lista e é isso que a função faz
-void junte_nodos_no_inicio_do_vetor (Tabela_de_frequencias* tab /* por referencia */)
+void junte_nodos_no_inicio_do_vetor (Tabela_de_frequencias* tab)
 {
     U16 primeiro_NULL, primeiro_nao_NULL;
 
@@ -113,14 +107,20 @@ boolean constroi_arvore_huffman(Tabela_de_frequencias* tab, Ptr_de_no_de_arvore_
 
 void salvar_arvore(Ptr_de_no_de_arvore_binaria raiz, FILE* saida) {
     if (raiz == NULL) {
-        fputc(0, saida); 
+        fputc(0, saida);
         return;
     }
 
-    fputc(1, saida); 
-    fputc(raiz->informacao.byte, saida);  
-    fwrite(&(raiz->informacao.frequencia), sizeof(U32), 1, saida); 
-
+    fputc(1, saida);
+    
+    if (raiz->esquerda == NULL && raiz->direita == NULL) {
+        fputc(1, saida);
+        fputc(raiz->informacao.byte, saida); 
+        fwrite(&(raiz->informacao.frequencia), sizeof(U32), 1, saida);
+    } else {
+        fputc(0, saida); 
+    }
+    
     salvar_arvore(raiz->esquerda, saida);
     salvar_arvore(raiz->direita, saida);
 }

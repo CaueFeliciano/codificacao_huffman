@@ -14,85 +14,95 @@ static boolean eh_folha(Ptr_de_no_de_arvore_binaria no) {
 
 static Ptr_de_no_de_arvore_binaria carregar_arvore(FILE* arquivo) {
     if (arquivo == NULL) return NULL;
-    
-    U8 bit_atual;
-    if (fread(&bit_atual, 1, 1, arquivo) != 1) {
+
+    U8 existe_no;
+    if (fread(&existe_no, 1, 1, arquivo) != 1) {
         return NULL;
     }
     
-    if (bit_atual == 1) {
+    if (existe_no == 0) {
+        return NULL;
+    }
+    
+    U8 eh_folha;
+    if (fread(&eh_folha, 1, 1, arquivo) != 1) {
+        return NULL;
+    }
+    
+    Ptr_de_no_de_arvore_binaria no = (Ptr_de_no_de_arvore_binaria)malloc(sizeof(Struct_do_no_de_arvore_binaria));
+    if (no == NULL) return NULL;
+    
+    if (eh_folha == 1) {
         U8 valor;
         if (fread(&valor, 1, 1, arquivo) != 1) {
-            return NULL;
-        }
-        
-        Ptr_de_no_de_arvore_binaria no = (Ptr_de_no_de_arvore_binaria)malloc(sizeof(Struct_do_no_de_arvore_binaria));
-        if (no == NULL) return NULL;
-        
-        no->informacao.byte = valor;
-        no->informacao.frequencia = 0;  // A frequência não é necessária para a descompactação
-        no->esquerda = NULL;
-        no->direita = NULL;
-        
-        return no;
-    } 
-    // Se o bit atual é 0, nó é um nó interno
-    else if (bit_atual == 0) {
-        // Criar o nó interno
-        Ptr_de_no_de_arvore_binaria no = (Ptr_de_no_de_arvore_binaria)malloc(sizeof(Struct_do_no_de_arvore_binaria));
-        if (no == NULL) return NULL;
-        
-        no->informacao.frequencia = 0;  // A frequência não é necessária para a descompactação
-        no->informacao.byte = 0;        // Para nós internos, o byte não importa
-        
-        no->esquerda = carregar_arvore(arquivo);
-        no->direita = carregar_arvore(arquivo);
-        
-        if (no->esquerda == NULL || no->direita == NULL) {
-            // Liberar memória em caso de erro
-            if (no->esquerda != NULL) free(no->esquerda);
-            if (no->direita != NULL) free(no->direita);
             free(no);
             return NULL;
         }
         
-        return no;
+        U32 frequencia;
+        if (fread(&frequencia, sizeof(U32), 1, arquivo) != 1) {
+            free(no);
+            return NULL;
+        }
+        
+        no->informacao.byte = valor;
+        no->informacao.frequencia = frequencia;
+        no->esquerda = NULL;
+        no->direita = NULL;
     } else {
-        return NULL;
+        no->informacao.byte = 0; 
+        no->informacao.frequencia = 0; 
+        
+        no->esquerda = carregar_arvore(arquivo);
+        no->direita = carregar_arvore(arquivo);
+        
+        if (no->esquerda != NULL && no->direita != NULL) {
+            no->informacao.frequencia = no->esquerda->informacao.frequencia + 
+                                        no->direita->informacao.frequencia;
+        }
     }
+    
+    return no;
 }
 
 static void free_arvore_binaria(Ptr_de_no_de_arvore_binaria no) {
     if (no == NULL) return;
     
-    // Liberar recursivamente os filhos
     free_arvore_binaria(no->esquerda);
     free_arvore_binaria(no->direita);
     
-    // Liberar o nó atual
     free(no);
 }
 
 boolean descompactar_arquivo(const char* nome_entrada, const char* nome_saida) {
     FILE* entrada = fopen(nome_entrada, "rb");
     if (entrada == NULL) return false;
-    
+
     FILE* saida = fopen(nome_saida, "wb");
     if (saida == NULL) {
         fclose(entrada);
         return false;
     }
-    
+
     Ptr_de_no_de_arvore_binaria raiz = carregar_arvore(entrada);
     if (raiz == NULL) {
         fclose(entrada);
         fclose(saida);
         return false;
     }
-    
+
+    long tamanho_original;
+    if (fread(&tamanho_original, sizeof(long), 1, entrada) != 1) {
+        free_arvore_binaria(raiz);
+        fclose(entrada);
+        fclose(saida);
+        return false;
+    }
+
+    long bytes_descompactados = 0;
+
     U8 byte_atual;
     int bit_pos = 0;
-    boolean fim_arquivo = false;
     
     if (fread(&byte_atual, 1, 1, entrada) != 1) {
         free_arvore_binaria(raiz);
@@ -100,47 +110,54 @@ boolean descompactar_arquivo(const char* nome_entrada, const char* nome_saida) {
         fclose(saida);
         return false;
     }
-    
-    while (!fim_arquivo) {
+
+    while (bytes_descompactados < tamanho_original) {
         Ptr_de_no_de_arvore_binaria no_atual = raiz;
-        
-        // Navegar pela árvore até encontrar uma folha
-        while (no_atual != NULL && !eh_folha(no_atual)) {
-            // Ler o próximo bit
-            int bit = ler_bit(byte_atual, bit_pos);
-            
-            // Avançar para o próximo bit
+
+        while (no_atual != NULL && !(no_atual->esquerda == NULL && no_atual->direita == NULL)) {
+            int bit = (byte_atual >> (7 - bit_pos)) & 1;
+
             bit_pos++;
             if (bit_pos == 8) {
                 if (fread(&byte_atual, 1, 1, entrada) != 1) {
-                    if (no_atual != raiz) {
-                        // Se estivermos no meio da decodificação de um caractere, pode haver um problema no arquivo compactado
-                        fim_arquivo = true;
-                        break;
+                    if (feof(entrada)) {
+                        int bits_validos;
+                        fseek(entrada, -sizeof(int), SEEK_END);
+                        fread(&bits_validos, sizeof(int), 1, entrada);
+                        
+                        if (bit_pos >= bits_validos) {
+                            break;
+                        }
                     }
-                    fim_arquivo = true;
-                    break;
+                    
+                    free_arvore_binaria(raiz);
+                    fclose(entrada);
+                    fclose(saida);
+                    return false;
                 }
                 bit_pos = 0;
             }
-            
-            // Navega pela árvore
+
             if (bit == 0) {
                 no_atual = no_atual->esquerda;
             } else {
                 no_atual = no_atual->direita;
             }
         }
-        
-        // Se encontramos uma folha, escrevemos seu valor no arquivo de saída
-        if (no_atual != NULL && eh_folha(no_atual) && !fim_arquivo) {
+
+        if (no_atual != NULL && no_atual->esquerda == NULL && no_atual->direita == NULL) {
             U8 caractere = no_atual->informacao.byte;
             fwrite(&caractere, 1, 1, saida);
+            bytes_descompactados++;
+        } else {
+            break;
         }
     }
+
+    // Limpeza
     free_arvore_binaria(raiz);
     fclose(entrada);
     fclose(saida);
-    
-    return true;
+
+    return bytes_descompactados == tamanho_original;
 }
